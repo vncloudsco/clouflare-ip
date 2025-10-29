@@ -1,51 +1,49 @@
-addEventListener('fetch', event => {
-  event.respondWith(handleRequest(event.request));
-});
-
-async function handleRequest(request) {
-  const url = new URL(request.url);
-  const path = url.pathname;
-  const userAgent = request.headers.get('user-agent') || '';
-  
-  // Lấy IP từ các header có thể có
-  const ip = request.headers.get('cf-connecting-ip') || 
-             request.headers.get('x-real-ip') || 
-             request.headers.get('x-forwarded-for')?.split(',')[0] || 
-             'Unknown';
-  
-  // Xử lý các endpoint API
-  if (path === '/ip') {
-    return textResponse(ip);
+export default {
+  async fetch(request, env, ctx) {
+    const url = new URL(request.url);
+    const path = url.pathname;
+    const userAgent = request.headers.get('user-agent') || '';
+    
+    // Lấy IP từ các header có thể có
+    const ip = request.headers.get('cf-connecting-ip') || 
+               request.headers.get('x-real-ip') || 
+               request.headers.get('x-forwarded-for')?.split(',')[0] || 
+               'Unknown';
+    
+    // Xử lý các endpoint API
+    if (path === '/ip') {
+      return textResponse(ip);
+    }
+    
+    if (path === '/user-agent') {
+      return textResponse(userAgent);
+    }
+    
+    if (path === '/json') {
+      return jsonResponse(request, ip);
+    }
+    
+    if (path === '/all') {
+      return allHeadersResponse(request, ip);
+    }
+    
+    // Nếu client yêu cầu JSON (curl với -H "Accept: application/json")
+    const accept = request.headers.get('accept') || '';
+    if (accept.includes('application/json')) {
+      return jsonResponse(request, ip);
+    }
+    
+    // Nếu là curl hoặc wget, trả về plain text
+    if (userAgent.toLowerCase().includes('curl') || 
+        userAgent.toLowerCase().includes('wget') ||
+        userAgent.toLowerCase().includes('httpie')) {
+      return textResponse(ip);
+    }
+    
+    // Trả về HTML cho browser
+    return htmlResponse(request, ip);
   }
-  
-  if (path === '/user-agent') {
-    return textResponse(userAgent);
-  }
-  
-  if (path === '/json') {
-    return jsonResponse(request, ip);
-  }
-  
-  if (path === '/all') {
-    return allHeadersResponse(request, ip);
-  }
-  
-  // Nếu client yêu cầu JSON (curl với -H "Accept: application/json")
-  const accept = request.headers.get('accept') || '';
-  if (accept.includes('application/json')) {
-    return jsonResponse(request, ip);
-  }
-  
-  // Nếu là curl hoặc wget, trả về plain text
-  if (userAgent.toLowerCase().includes('curl') || 
-      userAgent.toLowerCase().includes('wget') ||
-      userAgent.toLowerCase().includes('httpie')) {
-    return textResponse(ip);
-  }
-  
-  // Trả về HTML cho browser
-  return htmlResponse(request, ip);
-}
+};
 
 function textResponse(text) {
   return new Response(text + '\n', {
