@@ -90,7 +90,14 @@ function allHeadersResponse(request, ip) {
     text += JSON.stringify(request.cf, null, 2);
   }
   
-  return textResponse(text);
+  return new Response(text + '\n', {
+    status: 200,
+    headers: {
+      'Content-Type': 'text/plain; charset=utf-8',
+      'Cache-Control': 'no-cache, no-store, must-revalidate',
+      'X-Content-Type-Options': 'nosniff',
+    }
+  });
 }
 
 function htmlResponse(request, ip) {
