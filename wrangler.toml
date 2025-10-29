@@ -1,4 +1,4 @@
-name = "ip-info"
+name = "ifconfig"
 main = "worker.js"
 compatibility_date = "2025-10-29"
 
